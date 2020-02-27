@@ -1,0 +1,250 @@
+//Code for the Car
+#include <RPLidar.h>
+#include <DallasTemperature.h>
+#include <OneWire.h>
+#include <Arduino.h>
+#include <TM1637Display.h>
+
+RPLidar lidar;
+
+#define enA 5
+#define in1 13
+#define in2 12
+#define enB 6
+#define in3 2
+#define in4 7
+#define RPLIDAR_MOTOR 3
+#define led 8
+#define CLK A5
+#define DIO A4
+
+//#define enC 9
+#define in5 A3
+#define in6 A2
+
+int temp_sensor = A1; 
+float temperature = 0;
+int hitastig = 0;
+
+OneWire oneWirePin(temp_sensor);
+DallasTemperature sensors(&oneWirePin);
+TM1637Display display(CLK, DIO);
+
+int motorSpeedA = 0;
+int motorSpeedB = 0;
+
+unsigned long startMillis;
+unsigned long currentMillis;
+
+void setup() {
+  Serial.begin(9600);
+  lidar.begin(Serial);
+  pinMode(RPLIDAR_MOTOR, OUTPUT);
+  pinMode(enA, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+  pinMode(in5, OUTPUT);
+  pinMode(in6, OUTPUT);
+  //pinMode(enC, OUTPUT);
+  pinMode(led, OUTPUT);
+
+  sensors.begin();
+}
+
+void go_forward() {
+  // Set Motor A 
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  // Set Motor B 
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+  motorSpeedA = 199;
+  motorSpeedB = 199;
+  analogWrite(enB, motorSpeedB); // Send PWM signal to motor B
+  analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
+}
+
+void go_backward() {
+  // Set Motor A 
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  // Set Motor B 
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+  motorSpeedA = 199;
+  motorSpeedB = 199;
+  analogWrite(enB, motorSpeedB); // Send PWM signal to motor B
+  analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
+}
+
+void stop_driving() {
+  // Set Motor A 
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  // Set Motor B 
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+  motorSpeedA = 0;
+  motorSpeedB = 0;
+  analogWrite(enB, motorSpeedB); // Send PWM signal to motor B
+  analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
+}
+
+void turn_left() {
+  // Set Motor A 
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, HIGH);
+  // Set Motor B 
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+  motorSpeedA = 255;
+  motorSpeedB = 255;
+  analogWrite(enB, motorSpeedB); // Send PWM signal to motor B
+  analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
+}
+
+void daela() {
+  // Set Dæla 
+  digitalWrite(in5, LOW);
+  digitalWrite(in6, HIGH);
+  //analogWrite(enC, 255); // Send PWM signal to motor B
+}
+
+void daela_aftur() {
+  // Set Dæla 
+  digitalWrite(in5, HIGH);
+  digitalWrite(in6, LOW);
+  //analogWrite(enC, 255); // Send PWM signal to motor B
+}
+
+void haetta_daela() {
+  // Set Dæla 
+  digitalWrite(in5, LOW);
+  digitalWrite(in6, LOW);
+  //analogWrite(enC, 0); // Send PWM signal to Dæla
+}
+
+void turn_right() {
+  // Set Motor A 
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  // Set Motor B 
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, HIGH);
+  motorSpeedA = 255;
+  motorSpeedB = 255;
+  analogWrite(enB, motorSpeedB); // Send PWM signal to motor B
+  analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
+}
+
+void loop() {
+  display.setBrightness(0x0f);
+  sensors.requestTemperatures();
+  temperature = sensors.getTempCByIndex(0);
+  hitastig = round(temperature);
+  delay(2000);
+  uint8_t data[] = { 0x0, 0x0, 0x0, 0x0 };
+  display.setSegments(data);
+  display.showNumberDec(hitastig, false, 3,0);
+  digitalWrite(led, HIGH);
+  
+  analogWrite(RPLIDAR_MOTOR, 0); //stop the rplidar motor
+
+  while (1) {
+    // try to detect RPLIDAR... 
+    rplidar_response_device_info_t info;
+    if (IS_OK(lidar.getDeviceInfo(info, 100))) {
+      // detected...
+      lidar.startScan();
+       
+      // start motor rotating at max allowed speed
+      analogWrite(RPLIDAR_MOTOR, 255);
+      delay(10000);
+      break;
+    }
+  }
+
+  bool a = true;
+  
+  while (a) {
+    turn_left();
+    delay(200);
+    stop_driving();
+    delay(2000);
+    startMillis = millis();
+    currentMillis = millis();
+    while (currentMillis - startMillis < 10000) {
+      currentMillis = millis();
+      if (IS_OK(lidar.waitPoint())) {
+        float distance = 400.0;
+        float angle = 300.0;
+        distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+        angle    = lidar.getCurrentPoint().angle; //anglue value in degree
+        bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
+        byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
+
+        if (angle < 111.0 and angle > 71.0 and distance < 450.0 and distance > 50.0) {
+          a = false;
+          break;
+        }
+      }
+    }
+  }
+
+  while (1) {
+    if (IS_OK(lidar.waitPoint())) {
+      float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+      float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
+      bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
+      byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
+
+      if (angle < 90.0 and angle > 71.0 and distance < 450.0 and distance > 50.0) {
+        turn_left();
+        delay(30);
+        stop_driving();
+        delay(500);
+      }
+      else if (angle > 92.0 and angle < 111.0 and distance < 450.0 and distance > 50.0) {
+        turn_right();
+        delay(30);
+        stop_driving();
+        delay(500);
+      }
+      else if (angle > 90.0 and angle < 92.0 and distance < 450.0 and distance > 50.0) {
+        break;
+      }
+    }
+  }
+
+  startMillis = millis();
+  go_forward();
+  while (1) {
+    if (IS_OK(lidar.waitPoint())) {
+      float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+      float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
+      bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
+      byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
+
+      if (angle < 111.0 and angle > 71.0 and distance < 160.0 and distance > 50.0) {
+        stop_driving();
+        currentMillis = millis() - startMillis;
+        daela();
+        delay(60000);
+        daela_aftur();
+        delay(10000);
+        haetta_daela();
+        break;
+      }
+    }
+  }
+
+  startMillis = millis();
+  go_backward();
+  while (millis() - startMillis < currentMillis) {
+    
+  }
+  stop_driving();
+}
