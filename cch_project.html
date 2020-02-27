@@ -31,14 +31,43 @@
 					<div id="main">
 						<div class="inner">
 							<h1>Computerized hardware - build a wine-service machine</h1>
+                            <p>Computerized hardware is a class tought at the University of Iceland for the spring 2020.</p>
+                            <ul class="actions">
+							   <li><a href="https://ugla.hi.is/kennsluskra/index.php?sid=&tab=nam&chapter=namskeid&id=08221720200" class="button">Learn More about the class</a></li>
+						    </ul>
+                            <h2>The project</h2>
+                            <p>The objective of the project is to build and code a machine that can take a wine-bottle to a glass and then fill it up.<br />
+                            1) It has to find the glass and get to it.<br />
+                            2) It has to be able to fill the glass.<br />
+                            3) Get the temperature of the wine.<br />
+                            4) Live stream the process and show the temperature on the live stream as well as color analyze the wine.</p>
                             <h2>Live stream from the service.</h2>
                             <iframe src="https://player.twitch.tv/?channel=halldatl" frameborder="0" allowfullscreen="true" scrolling="no" height="378" width="620"></iframe><a href="https://www.twitch.tv/halldatl?tt_content=text_link&tt_medium=live_embed" style="padding:2px 0px 4px; display:block; width:345px; font-weight:normal; font-size:10px; text-decoration:underline;">Watch live video from halldatl on www.twitch.tv</a>
                             <h2>We started by building a car chassis and installing components.</h2>
-							<span class="image"><img src="images/verk3_000.jpg" height="650" /></span>
-                            <h2>Description</h2>
-							<p>To begin with we ...</p>
-							<ul class="actions">
-							   <li><a href="https://ugla.hi.is/kennsluskra/index.php?sid=&tab=nam&chapter=namskeid&id=08221720200" class="button">Learn More about the class</a></li>
+							<span class="image"><img src="images/verk3_000.jpg" width="850" /></span>
+                            <h2>About the installation and connections</h2>
+                            <p>1) We used Arduino Uno for the controls. Powered by 5V usb powerbank.<br />
+                            2) We had two DC-motors for the wheels, connected to motor-driver (L298N).<br />
+                            3) The motor-driver was connected to 12V battery and the Arduino board.<br />
+                            4) We had RP Lidar to scan dimensions. Powered by the 5V-pin on the Arduino board and connected to RX and TX, for data transfer.<br />
+                            5) The temperature sensor was also connected and powered by the Arduino board.<br />
+                            6) We then used Grove 4-Digit Dislpay to display the temperature. Also powered by the Arduino board<br />
+                            7) Then we had the pump connected to another  motor-driver (L298N), controlled by arduino and powered with 6V battery-pack(4*AA).<br />
+                            8) We used classic breadboard to help with most connections.</p>
+                            <h2>We then designed the shell and 3D printed</h2>
+                            <span class="image"><img src="images/verk3_001.jpg" width="850" /></span>
+                            <span class="image"><img src="images/verk3_010.jpg" width="850" /></span>
+                            <h2>Designed the holder for the wine-bottle and 3D printed</h2>
+                            <span class="image"><img src="images/holkur.jpg" width="850" /></span>
+                            <h2>Designed the support for the tube and 3D printed</h2>
+                            <span class="image"><img src="images/rani001.jpg" width="850" /></span>
+                            <h2>We then installed the bottle-holder and pump</h2>
+                            <span class="image"><img src="images/daela.jpg" width="850" /></span>
+                            <h2>At last we needed to code </h2>
+                            <span class="image"><img src="images/daela.jpg" width="850" /></span>
+							<h2>We used Arduino IDE to program the Arduino board for all controlls. You can find the code on our GitHub page below.</h2>
+                            <ul class="actions">
+							   <li><a href="https://github.com/halldatl/halldatl.github.io" class="button">Code used on GitHub</a></li>
 						    </ul>
 						</div>
 					</div>
