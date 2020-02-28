@@ -1,12 +1,13 @@
 //Code for the Car
-#include <RPLidar.h>
-#include <DallasTemperature.h>
-#include <OneWire.h>
+#include <RPLidar.h> //Library fyrir RPLidar fjarlægðar skynjarann
+#include <DallasTemperature.h> //Library sem þarf fyrir hitanemann
+#include <OneWire.h> //Library sem þarf fyrir hitanemann
 #include <Arduino.h>
-#include <TM1637Display.h>
+#include <TM1637Display.h> //Library sem þarf fyrir skjáinn
 
 RPLidar lidar;
 
+//Skilgreinum alla pinna
 #define enA 5
 #define in1 13
 #define in2 12
@@ -17,11 +18,10 @@ RPLidar lidar;
 #define led 8
 #define CLK A5
 #define DIO A4
-
-//#define enC 9
 #define in5 A3
 #define in6 A2
 
+//Sér skilgreining fyrir hitanemann því gögnin berast á öðruvísi formi og eru pinnarnir skilgreindir því inn í library-inu
 int temp_sensor = A1; 
 float temperature = 0;
 int hitastig = 0;
@@ -30,13 +30,16 @@ OneWire oneWirePin(temp_sensor);
 DallasTemperature sensors(&oneWirePin);
 TM1637Display display(CLK, DIO);
 
+//Breytur fyrir mótor hraða á sitthvoru hjólinu
 int motorSpeedA = 0;
 int motorSpeedB = 0;
 
+//Breytur sem eru notaðar til þess að tímastilla forritið
 unsigned long startMillis;
 unsigned long currentMillis;
 
 void setup() {
+  //Skilgreinum öll output og hefjum serial samskilpti við lidar nemann og hitanemann
   Serial.begin(9600);
   lidar.begin(Serial);
   pinMode(RPLIDAR_MOTOR, OUTPUT);
@@ -48,12 +51,11 @@ void setup() {
   pinMode(in4, OUTPUT);
   pinMode(in5, OUTPUT);
   pinMode(in6, OUTPUT);
-  //pinMode(enC, OUTPUT);
   pinMode(led, OUTPUT);
-
   sensors.begin();
 }
 
+//Fall sem lætur bílinn keyra áfram
 void go_forward() {
   // Set Motor A 
   digitalWrite(in1, LOW);
@@ -67,6 +69,7 @@ void go_forward() {
   analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
 }
 
+//Fall sem lætur bílinn keyra aftur á bak
 void go_backward() {
   // Set Motor A 
   digitalWrite(in1, HIGH);
@@ -80,6 +83,7 @@ void go_backward() {
   analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
 }
 
+//Fall sem lætur bílinn hætta að keyra
 void stop_driving() {
   // Set Motor A 
   digitalWrite(in1, LOW);
@@ -93,6 +97,7 @@ void stop_driving() {
   analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
 }
 
+//Fall sem lætur bílinn snúa sér til vinstri 
 void turn_left() {
   // Set Motor A 
   digitalWrite(in1, LOW);
@@ -106,6 +111,7 @@ void turn_left() {
   analogWrite(enA, motorSpeedA); // Send PWM signal to motor A
 }
 
+//Fall sem lætur dæluna dæla út
 void daela() {
   // Set Dæla 
   digitalWrite(in5, LOW);
@@ -113,6 +119,7 @@ void daela() {
   //analogWrite(enC, 255); // Send PWM signal to motor B
 }
 
+//Fall sem lætur dæluna dæla inn
 void daela_aftur() {
   // Set Dæla 
   digitalWrite(in5, HIGH);
@@ -120,6 +127,7 @@ void daela_aftur() {
   //analogWrite(enC, 255); // Send PWM signal to motor B
 }
 
+//Fall sem lætur dæluna dhætta að dæla
 void haetta_daela() {
   // Set Dæla 
   digitalWrite(in5, LOW);
@@ -127,6 +135,7 @@ void haetta_daela() {
   //analogWrite(enC, 0); // Send PWM signal to Dæla
 }
 
+//Fall sem lætur bílinn snúa sér til hægri
 void turn_right() {
   // Set Motor A 
   digitalWrite(in1, HIGH);
@@ -141,18 +150,18 @@ void turn_right() {
 }
 
 void loop() {
-  display.setBrightness(0x0f);
-  sensors.requestTemperatures();
-  temperature = sensors.getTempCByIndex(0);
-  hitastig = round(temperature);
-  delay(2000);
-  uint8_t data[] = { 0x0, 0x0, 0x0, 0x0 };
+  display.setBrightness(0x0f); //Stillum birtuna á skjánum
+  sensors.requestTemperatures();//Fáum hitastigsmælingar frá hitanemanum
+  temperature = sensors.getTempCByIndex(0);//Gefum float breytu mælinguna
+  hitastig = round(temperature);//Breytum mælingunni yfir í int
+  uint8_t data[] = { 0x0, 0x0, 0x0, 0x0 };//Hreinsum skjáinn
   display.setSegments(data);
-  display.showNumberDec(hitastig, false, 3,0);
-  digitalWrite(led, HIGH);
+  display.showNumberDec(hitastig, false, 3,0);//Birtum hitastigsmælinguna á skjánum
+  digitalWrite(led, HIGH);//Kveikjum á bílljósunum
   
   analogWrite(RPLIDAR_MOTOR, 0); //stop the rplidar motor
 
+  //Náum sambandi við lidar nemann
   while (1) {
     // try to detect RPLIDAR... 
     rplidar_response_device_info_t info;
@@ -168,15 +177,16 @@ void loop() {
   }
 
   bool a = true;
-  
+
+  //Lykkja sem lætur lidar nemann leita af mælingu fyrir framan sig í 5 sek og snúa sér svo
   while (a) {
     turn_left();
-    delay(200);
+    delay(150);
     stop_driving();
-    delay(2000);
+    delay(1000);
     startMillis = millis();
     currentMillis = millis();
-    while (currentMillis - startMillis < 10000) {
+    while (currentMillis - startMillis < 5000) {
       currentMillis = millis();
       if (IS_OK(lidar.waitPoint())) {
         float distance = 400.0;
@@ -194,6 +204,7 @@ void loop() {
     }
   }
 
+  //Lykkja sem lætur bílinn tikka til hægri og vinstri til að stilla sig betur
   while (1) {
     if (IS_OK(lidar.waitPoint())) {
       float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
@@ -219,8 +230,9 @@ void loop() {
     }
   }
 
-  startMillis = millis();
-  go_forward();
+  startMillis = millis(); //Byrjum tímatöku
+  go_forward(); //Keyrum áfram
+  //Lykkja sem stoppar bílinn í ákveðinni fjarlægð frá glasinu
   while (1) {
     if (IS_OK(lidar.waitPoint())) {
       float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
@@ -228,19 +240,21 @@ void loop() {
       bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
       byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
 
-      if (angle < 111.0 and angle > 71.0 and distance < 160.0 and distance > 50.0) {
+      if (angle < 111.0 and angle > 71.0 and distance < 140.0 and distance > 50.0) {
         stop_driving();
         currentMillis = millis() - startMillis;
-        daela();
-        delay(60000);
-        daela_aftur();
-        delay(10000);
-        haetta_daela();
         break;
       }
     }
   }
 
+  daela(); //Dæla vökva
+  delay(60000); //Dælum í 60 sek
+  daela_aftur(); //Dælum aftur á bak til þess að hreinsa rörið í 10 sek
+  delay(10000);
+  haetta_daela();
+
+  //Keyrum svo bílinn aftur á bak í sama tíma og hann keyrði áfram
   startMillis = millis();
   go_backward();
   while (millis() - startMillis < currentMillis) {
