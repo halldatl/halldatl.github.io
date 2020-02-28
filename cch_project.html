@@ -68,6 +68,14 @@
                             <ul class="actions">
 							   <li><a href="https://github.com/halldatl/halldatl.github.io/blob/master/CodeForCar.txt" class="button">Click here to see the code</a></li>
 						    </ul>
+                            <h2>Problems, solutions and operational process.</h2>
+							<p>We had to find a way to get the car to drive straight as the dc-motor were pulling different amount of currents. We thought about using rotary encoder, but we could not find a suitable component for it. Instead we used trials to determine which speed (defined by Arduino from 0-255 PWM) on each motor.<br />
+                            We also had to find a suitable time for the rotations of the car and found out that 150ms was a good time for the rotation (left wheels turn backwards, and right wheels turn forward).<br />
+                            The RP Lidar gives us 360° view from its position, so we have to define the degrees from where the Arduino wants to use its distance measurements. The RP Lidar gives 2 measurements, the degree from where the measurement is taken and distance to object (from 0,1m up to 30m). 90°on the Lidar is straight forward so we made him look for the glass on the given range 70°-110° and from 50mm to 450mm, based on the size of the table. All other measurements are discounted by the Arduino board.<br />
+                            When the Lidar finds a glass the car will align itself so that the glass will be straight in front of the car, in 90° on the Lidar. When it finds the glass it will drive straight to it and stop at a suitable distance (140 mm) so that the tube will be directly above the glass. Arduino will save the time that the car drives forward and drive for the same amount of time backwards once the pump has finished. <br />
+                            Then it will start the process again. Rotating for 150ms, look for the glass on the given range 70°-110° and from 50mm to 450mm and filling up the next glass it finds.<br />
+                            We solved the problem with live streaming the process by using a smart phone. The phone is mounted on top of the car and uses Twitch to live stream the process. We have a screen clearly visible on the stream that displays the temperature of the wine.<br />
+                            The original idea was to use ESP32-CAM module for this, but we could not get a connection from it through the Arduino IDE program. We spent about 40 hours trying to fix this problem and the conclusion was that the board is defected and we did not have time to order a new one. Instead we went with the solution above.</p>
                             <h2>See our demo test run below </h2>
                             <iframe width="560" height="315" src="https://www.youtube.com/embed/joiKE0q_new" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 						</div>
